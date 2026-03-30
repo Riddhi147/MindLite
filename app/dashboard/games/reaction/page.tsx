@@ -20,7 +20,8 @@ export default function ReactionGame() {
 
   const startRef = useRef<number>(0)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
-
+  const savedRef = useRef<boolean>(false)
+  
   const clearTimer = () => {
     if (timerRef.current) {
       clearTimeout(timerRef.current)
@@ -53,19 +54,17 @@ export default function ReactionGame() {
     }
 
     if (phase === "go") {
-      const elapsed = performance.now() - startRef.current
-      setCurrentTime(elapsed)
-      setTimes((prev) => {
-        const updated = [...prev, elapsed]
-        if (updated.length === TOTAL_ROUNDS) {
-          setPhase("done")
-          saveScore(updated)
-        } else {
-          setPhase("result")
-        }
-        return updated
-      })
-      return
+    const elapsed = performance.now() - startRef.current
+    setCurrentTime(elapsed)
+    const updated = [...times, elapsed]
+    setTimes(updated)
+    if (updated.length === TOTAL_ROUNDS) {
+      setPhase("done")
+      saveScore(updated)
+    } else {
+      setPhase("result")
+    }
+    return
     }
 
     if (phase === "result") {
@@ -81,34 +80,35 @@ export default function ReactionGame() {
   }
 
   const saveScore = async (allTimes: number[]) => {
-    setSaving(true)
-    try {
-      const storedUser = localStorage.getItem("user")
-      if (!storedUser) return
-      const { user_id } = JSON.parse(storedUser)
-      const avg = allTimes.reduce((a, b) => a + b, 0) / allTimes.length
-      // Score: lower reaction time = higher score (cap at 100, floor at 0)
-      // 200ms = 100, 1000ms = 0
-      const score = Math.max(0, Math.min(100, Math.round(((1000 - avg) / 800) * 100)))
-      await fetch(`${API_URL}/score`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id, game: "reaction", score }),
-      })
-    } catch (e) {
-      console.error("Failed to save score", e)
-    } finally {
-      setSaving(false)
-    }
+  setSaving(true)
+  try {
+    if (savedRef.current) return 
+      savedRef.current = true        
+    const storedUser = localStorage.getItem("user")
+    if (!storedUser) return
+    const { user_id } = JSON.parse(storedUser)
+    const avg = Math.round(allTimes.reduce((a, b) => a + b, 0) / allTimes.length)
+    console.log("hua??????:", {score: avg })
+    await fetch(`${API_URL}/score`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id, game: "reaction_time", score: avg }),
+    })
+  } catch (e) {
+    console.error("Failed to save score", e)
+  } finally {
+    setSaving(false)
   }
+}
 
   const restart = () => {
-    clearTimer()
-    setPhase("idle")
-    setRound(0)
-    setTimes([])
-    setCurrentTime(null)
-  }
+  clearTimer()
+  savedRef.current = false  // ← add this
+  setPhase("idle")
+  setRound(0)
+  setTimes([])
+  setCurrentTime(null)
+}
 
   useEffect(() => () => clearTimer(), [])
 

@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Brain, Target, Clock, Puzzle, ArrowRight, Sparkles, Heart } from "lucide-react"
+import { Brain, Target, Clock, Puzzle, ArrowRight, Sparkles, Heart, Zap } from "lucide-react"
 const games = [
   {
     id: "memory-match",
@@ -10,6 +10,15 @@ const games = [
     difficulty: "Easy",
     duration: "3-5 min",
   },
+  {
+  id: "reaction",
+  name: "Reaction Time",
+  description: "Wait for the button to turn green and tap as fast as you can. Tests processing speed and reflexes.",
+  icon: Zap,
+  color: "bg-yellow-500/10 text-yellow-500",
+  difficulty: "Easy",
+  duration: "1-2 min",
+ },
   // {
   //   id: "number-recall",
   //   name: "Number Recall",

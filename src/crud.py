@@ -2,14 +2,19 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from passlib.hash import bcrypt
 from . import models
+import bcrypt
+
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode("utf-8")[:72], bcrypt.gensalt()).decode("utf-8")
+
+def verify_password(password: str, hashed: str) -> bool:
+    return bcrypt.checkpw(password.encode("utf-8")[:72], hashed.encode("utf-8"))
+# def hash_password(password: str):
+#     return bcrypt.hash(password)
 
 
-def hash_password(password: str):
-    return bcrypt.hash(password)
-
-
-def verify_password(password: str, hashed: str):
-    return bcrypt.verify(password, hashed)
+# def verify_password(password: str, hashed: str):
+#     return bcrypt.verify(password, hashed)
 
 
 def create_user(db: Session, email: str, password: str, role: str):

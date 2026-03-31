@@ -6,8 +6,8 @@ def get_connection():
     return mysql.connector.connect(
         host="localhost",
         user="root",
-        password="Trishabh@1",
-        database="mindlite"
+        password="admin",
+        database="mind_lite"
     )
 
 def get_user_data(user_id):

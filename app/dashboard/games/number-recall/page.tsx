@@ -85,7 +85,7 @@ export default function NumberRecallGame() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id: parsedUser.user_id,
+          id: parsedUser.id,
           game: "number-recall",
           score,
         }),

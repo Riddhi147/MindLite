@@ -1,6 +1,7 @@
 {
   "name": "mindlite",
   "version": "0.1.0",
+  "author": "Riddhi",
   "private": true,
   "scripts": {
     "dev": "next dev",

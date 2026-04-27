@@ -38,20 +38,20 @@ app.post('/login', async (req, res) => {
   if (!user || user.password !== password) {
     return res.status(401).json({ error: "Invalid credentials" });
   }
-  res.json({ user_id: user.id, email: user.email, role: user.role });
+  res.json({ id: user.id, email: user.email, role: user.role });
 });
 
 app.post('/score', async (req, res) => {
-  const { user_id, game, score } = req.body;
+  const { id, game, score } = req.body;
   const newScore = await prisma.scores.create({
-    data: { user_id, game, score, created_at: new Date() }
+    data: { id, game, score, created_at: new Date() }
   });
   res.json(newScore);
 });
 
-app.get('/scores/:user_id', async (req, res) => {
-  const user_id = parseInt(req.params.user_id);
-  const scores = await prisma.scores.findMany({ where: { user_id } });
+app.get('/scores/:id', async (req, res) => {
+  const id = parseInt(req.params.id);
+  const scores = await prisma.scores.findMany({ where: { id } });
   res.json(scores);
 });
 

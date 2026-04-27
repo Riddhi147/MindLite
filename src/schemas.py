@@ -13,7 +13,7 @@ class LoginRequest(BaseModel):
 
 
 class ScoreRequest(BaseModel):
-    user_id: int
+    id: int
     game: str
     score: float
 
@@ -45,7 +45,7 @@ class CaregiverCreate(BaseModel):
 
 
 class CaregiverResponse(BaseModel):
-    id: int
+    SNo: int
     name: str
     email: str
 
@@ -87,3 +87,17 @@ class SyncPatientDataRequest(BaseModel):
     scores: list[GameScoreSchema]
     predictions: list[MLPredictionSchema]
     alerts: list[DeclineAlertSchema]
+
+
+class DailyCheckinRequest(BaseModel):
+    patient_id: int
+    q1: bool   # did you have more than 6hrs or uninturrupted sleep?
+    q2: bool   # Did you have any trouble recalling words or faces?
+    q3: bool   # Did you misplace any of your belongings today?
+
+
+class DailyCheckinResponse(BaseModel):
+    date: str
+    q1: bool
+    q2: bool
+    q3: bool

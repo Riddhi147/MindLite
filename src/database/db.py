@@ -6,21 +6,21 @@ def get_connection():
     return mysql.connector.connect(
         host="localhost",
         user="root",
-        password="admin",
+        password="yourpassword",
         database="mind_lite"
     )
 
-def get_user_data(user_id):
+def get_user_data(id):
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
     query = """
     SELECT game, score 
     FROM scores
-    WHERE user_id = %s
+    WHERE id = %s
     """
     
-    cursor.execute(query, (user_id,))
+    cursor.execute(query, (id,))
     rows = cursor.fetchall()
 
     cursor.close()

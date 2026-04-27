@@ -3,7 +3,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import UploadFile, File, Form
+from fastapi import UploadFile, File, Form, Request
 import shutil
 import os
 from src.api.ml_routes import router
@@ -50,22 +50,21 @@ def login(user: schemas.LoginRequest, db: Session = Depends(get_db)):
     db_user = crud.login_user(db, user.email, user.password)
     if not db_user:
         return {"error": "Invalid credentials"}
-    return {"user_id": db_user.id, "email": db_user.email, "role": db_user.role}
+    return {"id": db_user.SNo, "email": db_user.email, "role": db_user.role}
 
 
 @app.post("/score")
 def add_score(score: schemas.ScoreRequest, db: Session = Depends(get_db)):
-    return crud.save_score(db, score.user_id, score.game, score.score)
+    return crud.save_score(db, score.id, score.game, score.score)
+
+@app.get("/scores/{id}")
+def get_scores(id: int, db: Session = Depends(get_db)):
+    return crud.get_scores(db, id)
 
 
-@app.get("/scores/{user_id}")
-def get_scores(user_id: int, db: Session = Depends(get_db)):
-    return crud.get_scores(db, user_id)
-
-
-@app.get("/family-members/{user_id}")
-def get_family_members(user_id: int, db: Session = Depends(get_db)):
-    members = crud.get_family_members(db, user_id)
+@app.get("/family-members/{id}")
+def get_family_members(id: int, db: Session = Depends(get_db)):
+    members = crud.get_family_members(db, id)
     return [
         {"name": m.name, "relation": m.relation, "image": f"http://127.0.0.1:8000/{m.image_path}"}
         for m in members
@@ -74,7 +73,7 @@ def get_family_members(user_id: int, db: Session = Depends(get_db)):
 
 @app.post("/upload-family-member")
 def upload_family_member(
-    user_id: int = Form(...),
+    id: int = Form(...),
     name: str = Form(...),
     relation: str = Form(...),
     image: UploadFile = File(...),
@@ -85,7 +84,7 @@ def upload_family_member(
     file_path = f"{UPLOAD_FOLDER}/{filename}"
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(image.file, buffer)
-    crud.create_family_member(db=db, user_id=user_id, name=name, relation=relation, image_path=file_path)
+    crud.create_family_member(db=db, id=id, name=name, relation=relation, image_path=file_path)
     return {"message": "Family member uploaded successfully"}
 
 
@@ -98,10 +97,10 @@ def add_patient(payload: schemas.AddPatientRequest, db: Session = Depends(get_db
         raise HTTPException(status_code=404, detail="No patient found with those credentials")
     if patient.role != "patient":
         raise HTTPException(status_code=400, detail="That account is not a patient account")
-    link = crud.link_doctor_patient(db, doctor_id=payload.doctor_id, patient_id=patient.id)
+    link = crud.link_doctor_patient(db, doctor_id=payload.doctor_id, patient_id=patient.SNo)
     if link is None:
         raise HTTPException(status_code=409, detail="Patient already linked to this doctor")
-    return {"patient_id": patient.id, "email": patient.email}
+    return {"patient_id": patient.SNo, "email": patient.email}
 
 
 @app.get("/doctor/{doctor_id}/patients")
@@ -130,7 +129,7 @@ def add_patient_caregiver(patient_email: str, payload: schemas.CaregiverCreate, 
     if not patient or patient.role != "patient":
         raise HTTPException(status_code=404, detail="Patient not found")
     
-    cg = crud.create_patient_caregiver(db, patient_id=patient.id, name=payload.name, email=payload.email)
+    cg = crud.create_patient_caregiver(db, patient_id=patient.SNo, name=payload.name, email=payload.email)
     return cg
 
 
@@ -254,3 +253,25 @@ def get_patient_data(email: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Patient not found")
     print(f"DEBUG: Executed query and successfully aggregated backend profile.")
     return profile
+
+
+# ── Daily Check-in ─────────────────────────────────────────────────────────────
+
+@app.post("/checkin")
+def save_checkin(payload: schemas.DailyCheckinRequest, db: Session = Depends(get_db)):
+    record = crud.upsert_daily_checkin(
+        db,
+        patient_id=payload.patient_id,
+        q1=payload.q1,
+        q2=payload.q2,
+        q3=payload.q3,
+    )
+    return {"date": str(record.date), "q1": bool(record.q1), "q2": bool(record.q2), "q3": bool(record.q3)}
+
+
+@app.get("/checkin/{patient_id}/today")
+def get_today_checkin(patient_id: int, db: Session = Depends(get_db)):
+    record = crud.get_today_checkin(db, patient_id)
+    if not record:
+        return None
+    return {"date": str(record.date), "q1": bool(record.q1), "q2": bool(record.q2), "q3": bool(record.q3)}

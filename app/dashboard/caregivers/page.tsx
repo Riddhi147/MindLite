@@ -3,7 +3,11 @@
 import { useEffect, useState } from "react"
 import { Plus, X, HeartPulse, Mail, User } from "lucide-react"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  (typeof window !== "undefined"
+    ? `${window.location.protocol}//${window.location.hostname}:8000`
+    : "http://127.0.0.1:8000")
 
 interface Caregiver {
   id: number
@@ -26,20 +30,40 @@ export default function CaregiversPage() {
     const storedUser = localStorage.getItem("user")
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser)
-      setUserEmail(parsedUser.email)
-      fetchCaregivers(parsedUser.email)
+      if (parsedUser?.email) {
+        setUserEmail(parsedUser.email)
+        fetchCaregivers(parsedUser.email)
+      } else {
+        setError("Logged in user email is not available.")
+        setLoading(false)
+      }
+    } else {
+      setError("No logged in user found.")
+      setLoading(false)
     }
   }, [])
 
   const fetchCaregivers = async (patientEmail: string) => {
+    setLoading(true)
+    setError(null)
+
     try {
-      const res = await fetch(`${API_URL}/patient/${encodeURIComponent(patientEmail)}/caregivers`)
-      if (res.ok) {
-        const data = await res.json()
-        setCaregivers(Array.isArray(data) ? data : [])
+      const url = `${API_URL}/patient/${encodeURIComponent(patientEmail)}/caregivers`
+      const res = await fetch(url)
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null)
+        setError(data?.detail || `Failed to load caregivers: ${res.status}`)
+        setCaregivers([])
+        return
       }
+
+      const data = await res.json()
+      setCaregivers(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error("Failed to fetch caregivers:", error)
+      setError("Failed to connect to backend. Please make sure the API server is running.")
+      setCaregivers([])
     } finally {
       setLoading(false)
     }
@@ -100,6 +124,12 @@ export default function CaregiversPage() {
         </button>
       </div>
 
+      {error && (
+        <div className="mb-6 p-4 rounded-2xl bg-destructive/10 border border-destructive/30 text-destructive">
+          {error}
+        </div>
+      )}
+
       {loading ? (
         <div className="flex items-center justify-center py-20">
           <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -140,7 +170,7 @@ export default function CaregiversPage() {
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-foreground/50" onClick={() => setShowModal(false)} />
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowModal(false)} />
           <div className="relative bg-card rounded-2xl border border-border p-6 w-full max-w-md shadow-xl">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">

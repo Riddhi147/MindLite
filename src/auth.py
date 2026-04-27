@@ -7,21 +7,19 @@ def hash_password(password):
 def register(email, password, role):
     conn = get_conn()
     cur = conn.cursor()
-
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS users(
+        SNo INTEGER PRIMARY KEY,
+        email TEXT UNIQUE,
+        password TEXT,
+        role TEXT
+    )
+    """)
     cur.execute("INSERT INTO users VALUES(NULL,%s,%s,%s)",
                 (email, hash_password(password), role))
 
     conn.commit()
     conn.close()
-
-    # cur.execute("""
-    # CREATE TABLE IF NOT EXISTS users(
-    #     id INTEGER PRIMARY KEY,
-    #     email TEXT UNIQUE,
-    #     password TEXT,
-    #     role TEXT
-    # )
-    # """)
 
 def login(email, password):
     conn = get_conn()

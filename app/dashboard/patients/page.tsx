@@ -75,8 +75,8 @@ export default function ManagePatientsPage() {
     const storedUser = localStorage.getItem("user")
     if (!storedUser) return
     const user = JSON.parse(storedUser)
-    setDoctorId(user.user_id)
-    fetchPatients(user.user_id)
+    setDoctorId(user.id)
+    fetchPatients(user.id)
     refreshKnownPatients()
 
     // Poll for new patient data every 5 seconds
@@ -264,7 +264,7 @@ export default function ManagePatientsPage() {
       </div>
 
       {/* ── Linked Patient List ────────────────────────────────────── */}
-      <h2 className="text-lg font-semibold text-foreground mb-3">Linked Patients (via Backend)</h2>
+      <h2 className="text-lg font-semibold text-foreground mb-3">Registered Patients</h2>
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -272,9 +272,9 @@ export default function ManagePatientsPage() {
       ) : patients.length === 0 ? (
         <div className="text-center py-12 bg-card rounded-2xl border border-border">
           <Users className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-          <h3 className="text-lg font-semibold text-foreground mb-1">No linked patients</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-1">No patients registered</h3>
           <p className="text-sm text-muted-foreground">
-            Use the lookup above to view patient data, or add patients via the backend.
+            No patients have registered yet. Patients will appear here once they create an account.
           </p>
         </div>
       ) : (
@@ -323,7 +323,7 @@ export default function ManagePatientsPage() {
       {/* Add patient modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-foreground/50" onClick={() => setShowModal(false)} />
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowModal(false)} />
           <div className="relative bg-card rounded-2xl border border-border p-6 w-full max-w-md">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-foreground">Add Patient</h2>
@@ -399,6 +399,8 @@ function PatientDataView({ email, onBack }: { email: string; onBack: () => void 
   const [alerts, setAlerts] = useState<DeclineAlert[]>([])
   const [refreshing, setRefreshing] = useState(false)
   const [predicting, setPredicting] = useState(false)
+  const [predictionError, setPredictionError] = useState<string | null>(null)
+  const [showLatestPrediction, setShowLatestPrediction] = useState(false)
 
   // Email / caregiver state
   const [caregivers, setCaregivers] = useState<Caregiver[]>([])
@@ -464,7 +466,13 @@ function PatientDataView({ email, onBack }: { email: string; onBack: () => void 
 
   const handleRunPrediction = async () => {
     setPredicting(true)
-    await autoPredict(email)
+    setPredictionError(null)
+    const result = await autoPredict(email)
+    if (!result) {
+      setPredictionError("Failed to run AI prediction. Please ensure the backend is running and has access to the ML model.")
+    } else {
+      setShowLatestPrediction(true)
+    }
     loadPatientData()
     setPredicting(false)
   }
@@ -647,6 +655,22 @@ function PatientDataView({ email, onBack }: { email: string; onBack: () => void 
           Live — auto-refreshes every 3 seconds
         </div>
       </div>
+
+      {predictionError && (
+        <div className="mb-6 p-4 rounded-2xl bg-destructive/10 border border-destructive/30 text-destructive text-sm flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="font-medium">Prediction Failed</p>
+            <p className="text-xs opacity-90">{predictionError}</p>
+          </div>
+          <button
+            onClick={() => setPredictionError(null)}
+            className="flex-shrink-0 hover:opacity-75"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -832,7 +856,7 @@ function PatientDataView({ email, onBack }: { email: string; onBack: () => void 
       )}
 
       {/* Latest AI Prediction */}
-      {latestPred && (
+      {showLatestPrediction && latestPred && (
         <div className={`p-5 rounded-2xl border mb-8 ${
           latestPred.risk === "Low Risk" ? "bg-emerald-500/10 border-emerald-500/20" :
           latestPred.risk === "Moderate Risk" ? "bg-amber-500/10 border-amber-500/20" :

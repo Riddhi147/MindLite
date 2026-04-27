@@ -15,6 +15,16 @@ export default function SettingsPage() {
     if (storedUser) {
       setUser(JSON.parse(storedUser))
     }
+
+    // Initialize dark mode from localStorage or system preference
+    const savedTheme = localStorage.getItem("theme")
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+    const isDark = savedTheme === "dark" || (!savedTheme && prefersDark)
+    
+    setDarkMode(isDark)
+    if (isDark) {
+      document.documentElement.classList.add("dark")
+    }
   }, [])
 
   const handleLogout = () => {
@@ -23,8 +33,10 @@ export default function SettingsPage() {
   }
 
   const toggleDarkMode = () => {
-    setDarkMode(!darkMode)
+    const newDarkMode = !darkMode
+    setDarkMode(newDarkMode)
     document.documentElement.classList.toggle("dark")
+    localStorage.setItem("theme", newDarkMode ? "dark" : "light")
   }
 
   return (

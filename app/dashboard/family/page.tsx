@@ -14,7 +14,7 @@ interface FamilyMember {
 const RELATION_OPTIONS = [
   "Mother", "Father", "Sister", "Brother",
   "Wife", "Husband", "Son", "Daughter",
-  "Grandmother", "Grandfather", "Friend", "Caregiver", "Other"
+  "Grandmother", "Grandfather", "Friend", "Other"
 ]
 
 export default function FamilyPage() {
@@ -32,7 +32,7 @@ export default function FamilyPage() {
     const storedUser = localStorage.getItem("user")
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser)
-      fetchMembers(parsedUser.user_id)
+      fetchMembers(parsedUser.id)
     }
   }, [])
 
@@ -67,12 +67,12 @@ export default function FamilyPage() {
       if (!storedUser) return
       const parsedUser = JSON.parse(storedUser)
       const formData = new FormData()
-      formData.append("user_id", parsedUser.user_id.toString())
+      formData.append("id", parsedUser.id.toString())
       formData.append("name", name)
       formData.append("relation", relation)
       formData.append("image", image)
       await fetch(`${API_URL}/upload-family-member`, { method: "POST", body: formData })
-      fetchMembers(parsedUser.user_id)
+      fetchMembers(parsedUser.id)
       setShowModal(false)
       setName("")
       setRelation("")

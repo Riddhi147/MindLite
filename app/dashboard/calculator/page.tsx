@@ -53,6 +53,17 @@ export default function CalculatorPage() {
       if (!res.ok) throw new Error(`Server error: ${res.status}`)
 
       const data = await res.json()
+      
+      // Check if the response contains an error
+      if (data.error) {
+        throw new Error(data.error)
+      }
+      
+      // Check if the response has the expected fields
+      if (!data.cognitive_score || data.risk === undefined) {
+        throw new Error("Invalid response from server: missing cognitive_score or risk")
+      }
+      
       const pred: PredictionResult = {
         cognitive_score: data.cognitive_score,
         risk: data.risk,
@@ -63,7 +74,7 @@ export default function CalculatorPage() {
         ...prev,
       ])
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to get prediction. Make sure the backend is running.")
+      setError(err instanceof Error ? err.message : "Failed to get prediction. Make sure the backend is running and the ML model is loaded.")
     } finally {
       setPredicting(false)
     }

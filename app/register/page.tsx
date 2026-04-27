@@ -9,7 +9,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"
 
 const roles = [
   { value: "patient", label: "Patient", description: "Track my own cognitive health", icon: User },
-  { value: "caregiver", label: "Caregiver", description: "Monitor a family member", icon: Users },
+  { value: "caregiver", label: "Doctor", description: "Monitor an existing patient.", icon: Users },
 ]
 
 export default function RegisterPage() {
@@ -119,11 +119,10 @@ export default function RegisterPage() {
                     key={r.value}
                     type="button"
                     onClick={() => setRole(r.value)}
-                    className={`p-4 rounded-xl border-2 text-left transition-all ${
-                      role === r.value
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50"
-                    }`}
+                    className={`p-4 rounded-xl border-2 text-left transition-all ${role === r.value
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                      }`}
                   >
                     <r.icon className={`w-6 h-6 mb-2 ${role === r.value ? "text-primary" : "text-muted-foreground"}`} />
                     <p className={`font-medium ${role === r.value ? "text-primary" : "text-foreground"}`}>

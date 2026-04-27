@@ -8,82 +8,82 @@ datasource db {
 }
 
 model decline_alerts {
-  id            Int     @id @default(autoincrement())
+  SNo           Int     @id @default(autoincrement())
   alert_id      String? @db.VarChar(100)
-  user_id       Int?
+  id            Int?
   type          String? @db.VarChar(50)
   message       String? @db.VarChar(500)
   drop_amount   Float?  @db.Float
   current_score Float?  @db.Float
   timestamp     String? @db.VarChar(100)
   dismissed     Int?
-  users         users?  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "decline_alerts_ibfk_1")
+  users         users?  @relation(fields: [id], references: [SNo], onDelete: NoAction, onUpdate: NoAction, map: "decline_alerts_ibfk_1")
 
-  @@index([id], map: "ix_decline_alerts_id")
-  @@index([user_id], map: "user_id")
+  @@index([SNo], map: "ix_decline_alerts_id")
+  @@index([id], map: "id")
 }
 
 model doctor_patients {
-  id                                      Int    @id @default(autoincrement())
+  SNo                                      Int    @id @default(autoincrement())
   doctor_id                               Int?
   patient_id                              Int?
-  users_doctor_patients_doctor_idTousers  users? @relation("doctor_patients_doctor_idTousers", fields: [doctor_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "doctor_patients_ibfk_1")
-  users_doctor_patients_patient_idTousers users? @relation("doctor_patients_patient_idTousers", fields: [patient_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "doctor_patients_ibfk_2")
+  users_doctor_patients_doctor_idTousers  users? @relation("doctor_patients_doctor_idTousers", fields: [doctor_id], references: [SNo], onDelete: NoAction, onUpdate: NoAction, map: "doctor_patients_ibfk_1")
+  users_doctor_patients_patient_idTousers users? @relation("doctor_patients_patient_idTousers", fields: [patient_id], references: [SNo], onDelete: NoAction, onUpdate: NoAction, map: "doctor_patients_ibfk_2")
 
   @@unique([doctor_id, patient_id], map: "uq_doctor_patient")
-  @@index([id], map: "ix_doctor_patients_id")
+  @@index([SNo], map: "ix_doctor_patients_id")
   @@index([patient_id], map: "patient_id")
 }
 
 model family_members {
-  id         Int     @id @default(autoincrement())
-  user_id    Int?
+  SNo        Int     @id @default(autoincrement())
+  id         Int?
   name       String? @db.VarChar(100)
   relation   String? @db.VarChar(100)
   image_path String? @db.VarChar(255)
-  users      users?  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "family_members_ibfk_1")
+  users      users?  @relation(fields: [id], references: [SNo], onDelete: NoAction, onUpdate: NoAction, map: "family_members_ibfk_1")
 
-  @@index([id], map: "ix_family_members_id")
-  @@index([user_id], map: "user_id")
+  @@index([SNo], map: "ix_family_members_id")
+  @@index([id], map: "id")
 }
 
 model ml_predictions {
-  id              Int     @id @default(autoincrement())
-  user_id         Int?
+  SNo             Int     @id @default(autoincrement())
+  id              Int?
   cognitive_score Float?  @db.Float
   risk            String? @db.VarChar(50)
   timestamp       String? @db.VarChar(100)
   inputs_json     String? @db.VarChar(500)
-  users           users?  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ml_predictions_ibfk_1")
+  users           users?  @relation(fields: [id], references: [SNo], onDelete: NoAction, onUpdate: NoAction, map: "ml_predictions_ibfk_1")
 
-  @@index([id], map: "ix_ml_predictions_id")
-  @@index([user_id], map: "user_id")
+  @@index([SNo], map: "ix_ml_predictions_id")
+  @@index([id], map: "id")
 }
 
 model patient_caregivers {
-  id         Int     @id @default(autoincrement())
+  SNo        Int     @id @default(autoincrement())
   patient_id Int?
   name       String? @db.VarChar(100)
   email      String? @db.VarChar(100)
-  users      users?  @relation(fields: [patient_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "patient_caregivers_ibfk_1")
+  users      users?  @relation(fields: [patient_id], references: [SNo], onDelete: NoAction, onUpdate: NoAction, map: "patient_caregivers_ibfk_1")
 
-  @@index([id], map: "ix_patient_caregivers_id")
+  @@index([SNo], map: "ix_patient_caregivers_id")
   @@index([patient_id], map: "patient_id")
 }
 
 model scores {
-  id         Int       @id @default(autoincrement())
-  user_id    Int?
+  SNo        Int       @id @default(autoincrement())
+  id         Int?
   game       String?   @db.VarChar(50)
   score      Float?    @db.Float
   created_at DateTime? @db.DateTime(0)
-  users      users?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "scores_ibfk_1")
+  users      users?    @relation(fields: [id], references: [SNo], onDelete: NoAction, onUpdate: NoAction, map: "scores_ibfk_1")
 
-  @@index([user_id], map: "user_id")
+  @@index([id], map: "id")
 }
 
 model users {
-  id                                                Int                  @id @default(autoincrement())
+  SNo                                                Int                  @id @default(autoincrement())
   email                                             String?              @unique(map: "email") @db.VarChar(100)
   password                                          String?              @db.VarChar(200)
   role                                              String?              @db.VarChar(50)
@@ -95,5 +95,5 @@ model users {
   patient_caregivers                                patient_caregivers[]
   scores                                            scores[]
 
-  @@index([id], map: "ix_users_id")
+  @@index([SNo], map: "ix_users_id")
 }

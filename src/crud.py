@@ -40,24 +40,24 @@ def login_user(db: Session, email: str, password: str):
     return user
 
 
-def save_score(db: Session, user_id: int, game: str, score: float):
-    new_score = models.Score(user_id=user_id, game=game, score=score)
+def save_score(db: Session, id: int, game: str, score: float):
+    new_score = models.Score(id=id, game=game, score=score)
     db.add(new_score)
     db.commit()
     db.refresh(new_score)
     return new_score
 
 
-def get_scores(db: Session, user_id: int):
-    return db.query(models.Score).filter(models.Score.user_id == user_id).all()
+def get_scores(db: Session, id: int):
+    return db.query(models.Score).filter(models.Score.id == id).all()
 
 
-def get_family_members(db: Session, user_id: int):
-    return db.query(models.FamilyMember).filter(models.FamilyMember.user_id == user_id).all()
+def get_family_members(db: Session, id: int):
+    return db.query(models.FamilyMember).filter(models.FamilyMember.id == id).all()
 
 
-def create_family_member(db: Session, user_id: int, name: str, relation: str, image_path: str):
-    member = models.FamilyMember(user_id=user_id, name=name, relation=relation, image_path=image_path)
+def create_family_member(db: Session, id: int, name: str, relation: str, image_path: str):
+    member = models.FamilyMember(id=id, name=name, relation=relation, image_path=image_path)
     db.add(member)
     db.commit()
     db.refresh(member)
@@ -79,19 +79,20 @@ def link_doctor_patient(db: Session, doctor_id: int, patient_id: int):
 
 
 def get_doctor_patients(db: Session, doctor_id: int):
-    links = db.query(models.DoctorPatient).filter(models.DoctorPatient.doctor_id == doctor_id).all()
+    # Get all registered patients (not just linked ones)
+    # This ensures caregivers/doctors can always see all patients
+    all_patients = db.query(models.User).filter(models.User.role == "patient").all()
+
     result = []
-    for link in links:
-        patient = db.query(models.User).filter(models.User.id == link.patient_id).first()
-        if patient:
-            scores = db.query(models.Score).filter(models.Score.user_id == patient.id).all()
-            last_played = max((s.created_at for s in scores), default=None)
-            result.append({
-                "patient_id": patient.id,
-                "email": patient.email,
-                "total_games": len(scores),
-                "last_played": last_played.isoformat() if last_played else None,
-            })
+    for patient in all_patients:
+        scores = db.query(models.Score).filter(models.Score.id == patient.SNo).all()
+        last_played = max((s.created_at for s in scores), default=None)
+        result.append({
+            "patient_id": patient.SNo,
+            "email": patient.email,
+            "total_games": len(scores),
+            "last_played": last_played.isoformat() if last_played else None,
+        })
     return result
 
 
@@ -113,12 +114,12 @@ def get_patient_caregivers(db: Session, patient_email: str):
     if not patient:
         return []
     caregivers = db.query(models.PatientCaregiver).filter(
-        models.PatientCaregiver.patient_id == patient.id
+        models.PatientCaregiver.patient_id == patient.SNo
     ).all()
     result = []
     for cg in caregivers:
         result.append({
-            "id": cg.id,
+            "id": cg.SNo,
             "name": cg.name,
             "email": cg.email,
         })
@@ -138,9 +139,9 @@ def sync_patient_data(db: Session, email: str, scores, predictions, alerts):
     if not user:
         return False
         
-    db.query(models.Score).filter(models.Score.user_id == user.id).delete()
-    db.query(models.MLPredictionData).filter(models.MLPredictionData.user_id == user.id).delete()
-    db.query(models.DeclineAlertData).filter(models.DeclineAlertData.user_id == user.id).delete()
+    db.query(models.Score).filter(models.Score.id == user.SNo).delete()
+    db.query(models.MLPredictionData).filter(models.MLPredictionData.id == user.SNo).delete()
+    db.query(models.DeclineAlertData).filter(models.DeclineAlertData.id == user.SNo).delete()
 
     for s in scores:
         from dateutil import parser
@@ -150,7 +151,7 @@ def sync_patient_data(db: Session, email: str, scores, predictions, alerts):
             dt = datetime.utcnow()
             
         db.add(models.Score(
-            user_id=user.id,
+            id=user.SNo,
             game=s.game,
             score=s.score,
             created_at=dt
@@ -158,7 +159,7 @@ def sync_patient_data(db: Session, email: str, scores, predictions, alerts):
         
     for p in predictions:
         db.add(models.MLPredictionData(
-            user_id=user.id,
+            id=user.SNo,
             cognitive_score=p.cognitive_score,
             risk=p.risk,
             timestamp=p.timestamp,
@@ -168,7 +169,7 @@ def sync_patient_data(db: Session, email: str, scores, predictions, alerts):
     for a in alerts:
         db.add(models.DeclineAlertData(
             alert_id=a.id,
-            user_id=user.id,
+            id=user.SNo,
             type=a.type,
             message=a.message,
             drop_amount=a.drop_amount,
@@ -186,14 +187,14 @@ def get_patient_profile(db: Session, email: str):
     if not user:
         return None
         
-    scores = db.query(models.Score).filter(models.Score.user_id == user.id).all()
-    predictions = db.query(models.MLPredictionData).filter(models.MLPredictionData.user_id == user.id).all()
-    alerts = db.query(models.DeclineAlertData).filter(models.DeclineAlertData.user_id == user.id).all()
+    scores = db.query(models.Score).filter(models.Score.id == user.SNo).all()
+    predictions = db.query(models.MLPredictionData).filter(models.MLPredictionData.id == user.SNo).all()
+    alerts = db.query(models.DeclineAlertData).filter(models.DeclineAlertData.id == user.SNo).all()
     
     return {
         "scores": [
             {
-                "id": s.id, 
+                "id": s.SNo, 
                 "game": s.game, 
                 "score": s.score, 
                 "created_at": s.created_at.isoformat() if s.created_at else None
@@ -222,3 +223,41 @@ def get_patient_profile(db: Session, email: str):
             for a in alerts
         ]
     }
+
+
+# ── Daily Check-in ────────────────────────────────────────────────────────────
+
+def upsert_daily_checkin(db: Session, patient_id: int, q1: bool, q2: bool, q3: bool):
+    from datetime import date
+    today = date.today()
+    existing = db.query(models.DailyCheckin).filter(
+        models.DailyCheckin.patient_id == patient_id,
+        models.DailyCheckin.date == today
+    ).first()
+    if existing:
+        existing.q1 = int(q1)
+        existing.q2 = int(q2)
+        existing.q3 = int(q3)
+        db.commit()
+        db.refresh(existing)
+        return existing
+    checkin = models.DailyCheckin(
+        patient_id=patient_id,
+        date=today,
+        q1=int(q1),
+        q2=int(q2),
+        q3=int(q3),
+    )
+    db.add(checkin)
+    db.commit()
+    db.refresh(checkin)
+    return checkin
+
+
+def get_today_checkin(db: Session, patient_id: int):
+    from datetime import date
+    today = date.today()
+    return db.query(models.DailyCheckin).filter(
+        models.DailyCheckin.patient_id == patient_id,
+        models.DailyCheckin.date == today
+    ).first()

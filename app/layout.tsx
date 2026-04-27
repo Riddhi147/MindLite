@@ -6,7 +6,8 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
 export const metadata: Metadata = {
   title: "MindLite - Cognitive Health Tracking",
-  description: "Early detection of cognitive decline through engaging games based on the Montreal Cognitive Assessment. Track your brain health and stay connected with loved ones.",
+  description: "Early detection of cognitive decline through engaging games based on the Montreal Cognitive Assessment. Developed by Riddhi.",
+  authors: [{ name: "Riddhi" }],
 }
 
 export const viewport: Viewport = {
@@ -21,7 +22,23 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                const savedTheme = localStorage.getItem('theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+                if (theme === 'dark') {
+                  document.documentElement.classList.add('dark');
+                }
+              } catch (e) {}
+            `,
+          }}
+        />
+      </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         {children}
       </body>

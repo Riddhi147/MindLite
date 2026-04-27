@@ -52,9 +52,9 @@ export default function FaceRecognitionGame() {
   useEffect(() => {
     const storedUser = localStorage.getItem("user")
     if (!storedUser) return
-    const { user_id } = JSON.parse(storedUser)
+    const { id } = JSON.parse(storedUser)
 
-    fetch(`${API_URL}/family-members/${user_id}`)
+    fetch(`${API_URL}/family-members/${id}`)
       .then((r) => r.json())
       .then((data: FamilyMember[]) => {
         if (!Array.isArray(data) || data.length < 2) {

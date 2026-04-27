@@ -204,9 +204,25 @@ export async function autoPredict(email: string): Promise<MLPrediction | null> {
       body: JSON.stringify(inputs),
     })
 
-    if (!res.ok) return null
+    if (!res.ok) {
+      console.error("Auto-predict returned status:", res.status)
+      return null
+    }
 
     const data = await res.json()
+    
+    // Check if the response contains an error
+    if (data.error) {
+      console.error("Auto-predict error:", data.error)
+      return null
+    }
+    
+    // Check if the response has the expected fields
+    if (data.cognitive_score === undefined || data.cognitive_score === null || data.risk === undefined) {
+      console.error("Auto-predict response missing fields:", data)
+      return null
+    }
+
     const pred: MLPrediction = {
       cognitive_score: data.cognitive_score,
       risk: data.risk,
@@ -232,11 +248,11 @@ export async function gameCompleted(email: string, game: string, score: number) 
   try {
     const storedUser = localStorage.getItem("user")
     if (storedUser) {
-      const { user_id } = JSON.parse(storedUser)
+      const { id } = JSON.parse(storedUser)
       await fetch(`${API_URL}/score`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id, game, score }),
+        body: JSON.stringify({ id, game, score }),
       }).catch(() => {}) // silently fail if DB is down
     }
   } catch {}

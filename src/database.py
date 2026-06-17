@@ -1,18 +1,25 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-import mysql.connector
+import os
 
-DB_CONFIG = {
-    "host": "localhost",
-    "user": "root",
-    "password": "yourpassword",
-    "database": "mind_lite"
-}
+# Railway environment variables (SAFE WAY)
+DB_HOST = os.getenv("mysql.railway.internal")
+DB_PORT = os.getenv("MYSQLPORT", "3306")
+DB_USER = os.getenv("root")
+DB_PASSWORD = os.getenv("tMAHBlJdovEIpswVWHmEaeeOfMxuwJXe")
+DB_NAME = os.getenv("railway")
 
-def get_conn():
-    return mysql.connector.connect(**DB_CONFIG)
+# Fallback (only if Railway vars are missing)
+if not DB_HOST:
+    DB_HOST = "localhost"
+    DB_USER = "root"
+    DB_PASSWORD = "yourpassword"
+    DB_NAME = "mind_lite"
 
-DATABASE_URL = "mysql+pymysql://root:yourpassword@localhost/mind_lite"
+DATABASE_URL = (
+    f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}"
+    f"@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+)
 
 engine = create_engine(DATABASE_URL)
 

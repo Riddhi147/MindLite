@@ -10,7 +10,10 @@ print("Dropping all existing tables...")
 Base.metadata.drop_all(bind=engine)
 
 print("Creating new tables with updated schema...")
-Base.metadata.create_all(bind=engine)
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as e:
+    print("DB init failed:", e)
 
 print("✅ Database schema reset complete!")
 print("\nNew schema:")

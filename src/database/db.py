@@ -1,13 +1,15 @@
 # src/database/db.py
 
+import os
 import mysql.connector
 
 def get_connection():
     return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="yourpassword",
-        database="mind_lite"
+        host=os.getenv("MYSQLHOST"),
+        user=os.getenv("MYSQLUSER"),
+        password=os.getenv("MYSQLPASSWORD"),
+        database=os.getenv("MYSQLDATABASE"),
+        port=int(os.getenv("MYSQLPORT", 3306))
     )
 
 def get_user_data(id):
@@ -19,7 +21,7 @@ def get_user_data(id):
     FROM scores
     WHERE id = %s
     """
-    
+
     cursor.execute(query, (id,))
     rows = cursor.fetchall()
 
@@ -29,9 +31,8 @@ def get_user_data(id):
     if not rows:
         return None
 
-    # Convert rows into dictionary
     data = {
-        "age": 65,  # temporary fixed value (since not in table)
+        "age": 65,  # placeholder (not in DB)
         "memory_score": 0,
         "attention_score": 0,
         "language_score": 0,

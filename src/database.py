@@ -1,6 +1,15 @@
+
+
+
+
 import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+
+
+print("MYSQLHOST:", os.getenv("MYSQLHOST"))
+print("MYSQLUSER:", os.getenv("MYSQLUSER"))
+print("MYSQLDATABASE:", os.getenv("MYSQLDATABASE"))
 
 host = os.getenv("MYSQLHOST")
 port = os.getenv("MYSQLPORT")

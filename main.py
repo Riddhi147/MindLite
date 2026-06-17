@@ -17,7 +17,12 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app = FastAPI()
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 try:
-    Base.metadata.create_all(bind=engine)
+    @app.on_event("startup")
+    def startup():
+        try:
+            Base.metadata.create_all(bind=engine)
+        except Exception as e:
+            print("DB init failed:", e)
 except Exception as e:
     print("DB init failed:", e)
 app.include_router(router)

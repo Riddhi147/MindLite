@@ -3,6 +3,7 @@ uvicorn
 sqlalchemy
 pymysql
 pydantic
+python-multipart
 passlib[bcrypt]
 python-jose
 mysql-connector-python

@@ -2,25 +2,16 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-import os
+host = os.getenv("MYSQLHOST")
+port = os.getenv("MYSQLPORT")
+user = os.getenv("MYSQLUSER")
+password = os.getenv("MYSQLPASSWORD")
+db = os.getenv("MYSQLDATABASE")
 
-print("MYSQLHOST =", os.getenv("MYSQLHOST"))
-print("MYSQLUSER =", os.getenv("MYSQLUSER"))
-print("MYSQLDATABASE =", os.getenv("MYSQLDATABASE"))
+if not all([host, user, password, db]):
+    raise Exception("Missing Railway MySQL environment variables")
 
-def build_db_url():
-    host = os.getenv("MYSQLHOST")
-    port = os.getenv("MYSQLPORT", "3306")
-    user = os.getenv("MYSQLUSER")
-    password = os.getenv("MYSQLPASSWORD")
-    db = os.getenv("MYSQLDATABASE")
-
-    if not all([host, user, password, db]):
-        raise Exception("Missing DB environment variables")
-
-    return f"mysql+pymysql://{user}:{password}@{host}:{port}/{db}"
-
-DATABASE_URL = build_db_url()
+DATABASE_URL = f"mysql+pymysql://{user}:{password}@{host}:{port}/{db}"
 
 engine = create_engine(DATABASE_URL)
 

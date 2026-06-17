@@ -1,12 +1,14 @@
 {
   "compilerOptions": {
-    "target": "es2016",
-    "module": "commonjs",
+    "target": "ES2020",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "outDir": "./dist",
+    "rootDir": "./",
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "skipLibCheck": true,
-    "outDir": "./dist"
+    "resolveJsonModule": true,
+    "strict": false,
+    "skipLibCheck": true
   },
-  "ts-node": {}
+  "include": ["**/*.ts"]
 }

@@ -1,78 +1,97 @@
-# 🧠 MindLite — Cognitive Health Monitoring System
+# MindLite
 
+MindLite is a cognitive-health monitoring application that combines short memory and attention games with progress tracking, caregiver support, and machine-learning-assisted cognitive score estimates.
 
-**MindLite** is a comprehensive health-tech platform designed for the early detection and continuous monitoring of cognitive decline, specifically focusing on Alzheimer's disease. Using engaging, clinically-inspired games, MindLite tracks memory, attention, and cognitive performance over time.
+## Features
 
-## 🌟 Key Features
+- Interactive memory, recall, pattern-recognition, reaction-time, and family-recognition games
+- Patient, doctor, and caregiver workflows
+- Cognitive-score predictions and decline alerts
+- Progress charts and daily wellbeing check-ins
+- Email communication from doctors to caregivers
 
-### 🎮 Cognitive Assessment Games
-- **Family Recognition**: Identify known faces and relationships (Visual Memory).
-- **Pattern Recognition**: Predict sequences and logical patterns (Logical Memory).
-- **Memory Match**: Speed-based symbol matching (Recall & Processing Speed).
-- **Word Recall**: Short-term and delayed verbal recall.
-- **Reaction Time**: Interactive tests for neuro-motor responses.
+## Technology
 
-### 📊 Advanced Analytics
-- **ML Predictions**: Uses Scikit-learn models to generate cognitive risk scores.
-- **Trend Analysis**: Tracks performance over a minimum of 10 days to detect subtle declines.
-- **Smart Alerts**: Automatically notifies healthcare professionals and guardians if sudden drops in performance are detected.
+| Area | Technology |
+| --- | --- |
+| Frontend | Next.js, React, TypeScript, Tailwind CSS |
+| API and ML | FastAPI, SQLAlchemy, scikit-learn |
+| Database | Neon PostgreSQL |
+| Hosting | Vercel |
 
+## Run locally
 
-## 🛠️ Tech Stack
+### Requirements
 
-### Frontend
-- **Framework**: [Next.js](https://nextjs.org/) (React)
-- **Styling**: Tailwind CSS & Modern Glassmorphism UI
-- **Components**: Lucide Icons, Recharts for health telemetry
+- Node.js 20 or later
+- Python 3.10 or later
+- A Neon PostgreSQL database, or another PostgreSQL instance
 
-### Backend (Architecture Refresh)
-- **FastAPI**: Python API and ML inference service, deployed as a Vercel function.
-- **Prisma ORM**: Modern database access layer.
-- **Neon PostgreSQL**: Persistent relational storage for user profiles and health data.
-- **Python**: Specialized service for Machine Learning inference.
+### 1. Configure environment variables
 
-
-## 🚀 Getting Started
-
-### 1. Prerequisites
-- Node.js (v18+)
-- A Neon PostgreSQL database
-- Python 3.9+ (for ML modules)
-
-Copy `.env.example` to `.env` and add your Neon connection string:
+Copy `.env.example` to `.env` and supply your values:
 
 ```env
 DATABASE_URL="postgresql://USER:PASSWORD@HOST/DB?sslmode=require"
 NEXT_PUBLIC_API_URL="http://127.0.0.1:8000"
+CORS_ORIGINS="http://localhost:3000"
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT="587"
+SMTP_USER=""
+SMTP_PASSWORD=""
 ```
 
+### 2. Install dependencies
 
-### 3. Installation
-
-**Frontend:**
-npm install
-
-**Backend:**
 ```bash
+pnpm install
 pip install -r requirements.txt
 ```
 
-### 4. Running the Application
+### 3. Create the database tables
 
+```bash
+python -c "from src.database import Base, engine; import src.models; Base.metadata.create_all(bind=engine)"
+```
+
+### 4. Start the application
+
+Use two terminals:
+
+```bash
 uvicorn main:app --reload
-npm run dev
+```
 
-## Deploying to Vercel and Neon
+```bash
+pnpm dev
+```
+
+The website is available at `http://localhost:3000`; the API is available at `http://127.0.0.1:8000`.
+
+## Deploy to Vercel and Neon
 
 1. Create a Neon project and copy its **pooled** PostgreSQL connection string.
-2. In Vercel, import this repository and add `DATABASE_URL` with that connection string.
-3. Run the schema creation once from a machine with `DATABASE_URL` configured:
+2. Import this repository into Vercel as a Next.js project.
+3. Add the following Vercel environment variables:
 
-   ```bash
-   python -c "from src.database import Base, engine; import src.models; Base.metadata.create_all(bind=engine)"
+   ```env
+   DATABASE_URL=<your Neon pooled PostgreSQL URL>
+   NEXT_PUBLIC_API_URL=https://YOUR-VERCEL-DOMAIN.vercel.app/api
+   CORS_ORIGINS=https://YOUR-VERCEL-DOMAIN.vercel.app
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_USER=<your SMTP user>
+   SMTP_PASSWORD=<your SMTP password or app password>
    ```
 
-4. In Vercel, set `NEXT_PUBLIC_API_URL` to `https://YOUR-DEPLOYMENT.vercel.app/api` and set `CORS_ORIGINS` to `https://YOUR-DEPLOYMENT.vercel.app`.
-5. Redeploy. The FastAPI API is served under `/api`; the Next.js site remains at `/`.
+4. Initialize the database tables using the command in the local setup section.
+5. Deploy and verify `https://YOUR-VERCEL-DOMAIN.vercel.app/api/` returns the API status message.
 
-`/upload-family-member` currently stores files in the server's temporary filesystem. On Vercel, those files are not durable between function invocations; move uploads to Vercel Blob or another object store before relying on that feature in production.
+Every subsequent push to the connected production branch triggers a new Vercel deployment.
+
+## Notes
+
+- Use a Neon pooled connection string for `DATABASE_URL`; it is designed for serverless connections.
+- Never commit `.env` files or credentials.
+- Family-member uploads use Vercel's temporary filesystem in the current implementation. Store uploads in Vercel Blob or another object store before relying on them in production.
+- MindLite supports monitoring and does not provide a medical diagnosis.

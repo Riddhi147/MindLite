@@ -90,7 +90,6 @@ export default function NumberRecallGame() {
           score,
         }),
       })
-///////////////
       const data = await res.json()
 
       if (data.error) {
@@ -98,7 +97,6 @@ export default function NumberRecallGame() {
       } else {
         router.push("/login?registered=true")
       }
-///////////////
     } catch (error) {
       console.error("Failed to save score:", error)
     } finally {

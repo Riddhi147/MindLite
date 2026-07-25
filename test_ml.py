@@ -3,7 +3,6 @@ import os
 import warnings
 warnings.filterwarnings("ignore")
 
-# Ensure the app root is in sys.path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from src.ml.predict import predict_from_games

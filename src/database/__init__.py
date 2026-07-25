@@ -1,2 +1,2 @@
 from .base import Base
-from .session import engine, SessionLocal
+from .session import DATABASE_URL, engine, SessionLocal

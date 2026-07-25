@@ -17,7 +17,8 @@ UPLOAD_FOLDER = os.getenv(
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 app = FastAPI()
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=UPLOAD_FOLDER), name="uploads")
 try:
     @app.on_event("startup")
     def startup():

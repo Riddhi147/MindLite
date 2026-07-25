@@ -11,7 +11,9 @@ from src.database import SessionLocal, engine, Base
 from src import crud
 from src import schemas
 
-UPLOAD_FOLDER = "uploads"
+UPLOAD_FOLDER = os.getenv(
+    "UPLOAD_FOLDER", "/tmp/uploads" if os.getenv("VERCEL") else "uploads"
+)
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 app = FastAPI()
@@ -29,7 +31,11 @@ app.include_router(router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        origin.strip()
+        for origin in os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+        if origin.strip()
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -205,23 +211,22 @@ def send_email(payload: schemas.SendEmailRequest, db: Session = Depends(get_db))
     errors = []
     
     sent = []
-    smtp_host = "smtp.gmail.com"
-    smtp_port = 587
-    smtp_user = "mindlite.doc@gmail.com"
-    #Stmp_pass = YOUR_PASSWORD
-    smtp_pass = "aldl qxii nhgf dqel"
+    smtp_user = os.environ.get("SMTP_USER")
+    smtp_pass = os.environ.get("SMTP_PASSWORD")
+    if not smtp_user or not smtp_pass:
+        raise HTTPException(status_code=503, detail="SMTP is not configured")
     for recipient in payload.caregiver_emails:
         try:
             msg = MIMEMultipart("alternative")
             msg["Subject"] = subject
-            msg["From"] = "mindlite.doc@gmail.com"
+            msg["From"] = smtp_user
             msg["To"] = recipient
             msg.attach(MIMEText(body, "html"))
 
             with smtplib.SMTP(smtp_host, smtp_port) as server:
                 server.starttls()
                 server.login(smtp_user, smtp_pass)
-                server.sendmail("mindlite.doc@gmail.com", recipient, msg.as_string())
+                server.sendmail(smtp_user, recipient, msg.as_string())
             sent.append(recipient)
         except Exception as e:
             errors.append({"email": recipient, "error": str(e)})

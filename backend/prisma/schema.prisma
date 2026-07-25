@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -13,8 +13,8 @@ model decline_alerts {
   id            Int?
   type          String? @db.VarChar(50)
   message       String? @db.VarChar(500)
-  drop_amount   Float?  @db.Float
-  current_score Float?  @db.Float
+  drop_amount   Float?
+  current_score Float?
   timestamp     String? @db.VarChar(100)
   dismissed     Int?
   users         users?  @relation(fields: [id], references: [SNo], onDelete: NoAction, onUpdate: NoAction, map: "decline_alerts_ibfk_1")
@@ -50,7 +50,7 @@ model family_members {
 model ml_predictions {
   SNo             Int     @id @default(autoincrement())
   id              Int?
-  cognitive_score Float?  @db.Float
+  cognitive_score Float?
   risk            String? @db.VarChar(50)
   timestamp       String? @db.VarChar(100)
   inputs_json     String? @db.VarChar(500)
@@ -75,8 +75,8 @@ model scores {
   SNo        Int       @id @default(autoincrement())
   id         Int?
   game       String?   @db.VarChar(50)
-  score      Float?    @db.Float
-  created_at DateTime? @db.DateTime(0)
+  score      Float?
+  created_at DateTime?
   users      users?    @relation(fields: [id], references: [SNo], onDelete: NoAction, onUpdate: NoAction, map: "scores_ibfk_1")
 
   @@index([id], map: "id")

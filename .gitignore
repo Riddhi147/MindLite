@@ -6,3 +6,4 @@ uploads/
 *.pyc
 package-lock.json
 .env
+.pnpm-store/

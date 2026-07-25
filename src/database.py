@@ -1,33 +1,26 @@
+"""Database connection shared by the FastAPI application.
 
-
-
+Set DATABASE_URL to the pooled PostgreSQL connection string supplied by Neon.
+No provider-specific credentials are read from the application.
+"""
 
 import os
+
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import declarative_base, sessionmaker
 
 
-print("MYSQLHOST:", os.getenv("MYSQLHOST"))
-print("MYSQLUSER:", os.getenv("MYSQLUSER"))
-print("MYSQLDATABASE:", os.getenv("MYSQLDATABASE"))
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL is required. Add the Neon PostgreSQL URL to your environment.")
 
-host = os.getenv("MYSQLHOST")
-port = os.getenv("MYSQLPORT")
-user = os.getenv("MYSQLUSER")
-password = os.getenv("MYSQLPASSWORD")
-db = os.getenv("MYSQLDATABASE")
+# Neon may provide either postgres:// or postgresql://. SQLAlchemy's psycopg
+# dialect requires the explicit driver name.
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg://", 1)
+elif DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
 
-if not all([host, user, password, db]):
-    raise Exception("Missing Railway MySQL environment variables")
-
-DATABASE_URL = f"mysql+pymysql://{user}:{password}@{host}:{port}/{db}"
-
-engine = create_engine(DATABASE_URL)
-
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine
-)
-
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()

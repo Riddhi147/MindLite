@@ -1,12 +1,11 @@
 fastapi
 uvicorn
 sqlalchemy
-pymysql
+psycopg[binary]
 pydantic
 python-multipart
 passlib[bcrypt]
 python-jose
-mysql-connector-python
 joblib
 scikit-learn
 pandas

@@ -1,41 +1,30 @@
-import os
-import pymysql
+"""Inspect a user's records in the configured Neon PostgreSQL database."""
 
-conn = pymysql.connect(
-    host=os.getenv("MYSQLHOST"),
-    user=os.getenv("MYSQLUSER"),
-    password=os.getenv("MYSQLPASSWORD"),
-    database=os.getenv("MYSQLDATABASE"),
-    port=int(os.getenv("MYSQLPORT", 3306))
-)
+from sqlalchemy import text
 
-cursor = conn.cursor()
+from src.database import engine
 
-email = 'riddhikhurana04@gmail.com'
 
-cursor.execute("SELECT SNo, email, role FROM users WHERE email = %s", (email,))
-user = cursor.fetchone()
-print(f"User found: {user}")
+email = "riddhikhurana04@gmail.com"
 
-if user:
-    user_id = user[0]
+with engine.connect() as connection:
+    user = connection.execute(
+        text("SELECT \"SNo\", email, role FROM users WHERE email = :email"),
+        {"email": email},
+    ).mappings().first()
+    print(f"User found: {user}")
 
-    cursor.execute("SELECT SNo, game, score, created_at FROM scores WHERE id = %s", (user_id,))
-    scores = cursor.fetchall()
-    print(f"\nScores for id={user_id}: {len(scores)}")
-
-    for s in scores:
-        print(f"  SNo={s[0]}, game={s[1]}, score={s[2]}, created_at={s[3]}")
-
-    cursor.execute("SELECT SNo, cognitive_score, risk, timestamp, inputs_json FROM ml_predictions WHERE id = %s", (user_id,))
-    preds = cursor.fetchall()
-    print(f"\nPredictions for id={user_id}: {len(preds)}")
-
-    for p in preds:
-        print(f"  SNo={p[0]}, score={p[1]}, risk={p[2]}, inputs_json={p[4]}")
-
-    cursor.execute("SELECT * FROM decline_alerts WHERE id = %s", (user_id,))
-    alerts = cursor.fetchall()
-    print(f"\nAlerts for id={user_id}: {len(alerts)}")
-
-conn.close()
+    if user:
+        user_id = user["SNo"]
+        for table, columns in [
+            ("scores", '\"SNo\", game, score, created_at'),
+            ("ml_predictions", '\"SNo\", cognitive_score, risk, timestamp, inputs_json'),
+            ("decline_alerts", "*"),
+        ]:
+            rows = connection.execute(
+                text(f"SELECT {columns} FROM {table} WHERE id = :user_id"),
+                {"user_id": user_id},
+            ).mappings().all()
+            print(f"{table}: {len(rows)} record(s)")
+            for row in rows:
+                print(f"  {dict(row)}")
